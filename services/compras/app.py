@@ -9,6 +9,7 @@ from sqlalchemy import text
 import pika
 from database import get_db, engine
 from models import Usuario, Compra, Base
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # ─── Setup ────────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Compras Service")
 
+Instrumentator().instrument(app).expose(app)
 
 # ─── RabbitMQ ─────────────────────────────────────────────────────────────────
 

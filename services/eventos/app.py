@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from database import get_db, engine
 from models import Evento, Base
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # ─── Setup ────────────────────────────────────────────────────────────────────
 
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Eventos Service")
 
+Instrumentator().instrument(app).expose(app)
 
 # ─── Schemas ──────────────────────────────────────────────────────────────────
 

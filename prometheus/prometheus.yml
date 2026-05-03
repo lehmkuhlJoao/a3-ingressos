@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'eventos'
+    static_configs:
+      - targets: ['eventos:5000']
+
+  - job_name: 'compras'
+    static_configs:
+      - targets: ['compras:5000']
