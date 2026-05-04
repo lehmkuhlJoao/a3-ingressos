@@ -113,6 +113,15 @@ services:
     depends_on:
       - prometheus
 
+  frontend:
+      image: nginx:alpine
+      ports:
+        - "8080:80"
+      volumes:
+        - ./frontend:/usr/share/nginx/html:ro
+      depends_on:
+        - nginx
+
 volumes:
   postgres_data:
   grafana_data:
