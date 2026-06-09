@@ -1,796 +1,1722 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>A3 — Load Simulator</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A3 Ingressos</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
 
-  :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --surface2: #1a1a24;
-    --border: #2a2a3a;
-    --text: #e8e8f0;
-    --muted: #6b6b80;
-    --accent: #7c6aff;
-    --accent2: #00d4aa;
-    --green: #00d4aa;
-    --red: #ff4d6a;
-    --yellow: #ffb347;
-    --mono: 'JetBrains Mono', monospace;
-    --sans: 'Syne', sans-serif;
-  }
+    :root {
+      color-scheme: light;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --panel-soft: #eef3f8;
+      --ink: #17202a;
+      --muted: #697586;
+      --line: #d9e1ea;
+      --line-strong: #bac7d6;
+      --primary: #1957a6;
+      --primary-strong: #0d3f83;
+      --teal: #0f8b7f;
+      --amber: #a86500;
+      --red: #bf2f39;
+      --green: #227447;
+      --violet: #6550a6;
+      --shadow: 0 18px 50px rgba(23, 32, 42, 0.08);
+      --radius: 8px;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--mono);
-    height: 100vh;
-    overflow: hidden;
-    display: grid;
-    grid-template-columns: 320px 1fr;
-    grid-template-rows: 60px 1fr;
-  }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, #e8eef6 0, rgba(232, 238, 246, 0) 310px),
+        var(--bg);
+      color: var(--ink);
+      font-family: var(--font);
+      letter-spacing: 0;
+    }
 
-  /* ── Header ── */
-  header {
-    grid-column: 1 / -1;
-    display: flex;
-    align-items: center;
-    padding: 0 24px;
-    border-bottom: 1px solid var(--border);
-    gap: 16px;
-  }
+    button, input, select {
+      font: inherit;
+    }
 
-  .logo {
-    font-family: var(--sans);
-    font-weight: 800;
-    font-size: 16px;
-    letter-spacing: -0.5px;
-    color: var(--text);
-  }
+    button {
+      cursor: pointer;
+    }
 
-  .logo span { color: var(--accent); }
+    button:disabled,
+    input:disabled,
+    select:disabled {
+      cursor: not-allowed;
+      opacity: 0.58;
+    }
 
-  .status-pill {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(0, 212, 170, 0.1);
-    border: 1px solid rgba(0, 212, 170, 0.3);
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    color: var(--green);
-    letter-spacing: 0.5px;
-  }
+    .shell {
+      width: min(1460px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 18px 0 26px;
+    }
 
-  .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 2s ease-in-out infinite;
-  }
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(210px, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
 
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
 
-  .stats-header {
-    margin-left: auto;
-    display: flex;
-    gap: 24px;
-  }
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--teal));
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
 
-  .stat-item { text-align: right; }
-  .stat-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-  .stat-value { font-size: 18px; font-weight: 600; color: var(--text); font-family: var(--sans); }
-  .stat-value.green { color: var(--green); }
-  .stat-value.red { color: var(--red); }
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(20px, 3vw, 30px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
 
-  /* ── Sidebar ── */
-  aside {
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
 
-  /* ── Tab nav ── */
-  .tab-nav {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
 
-  .tab-btn {
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.5px;
-    padding: 12px 4px;
-    cursor: pointer;
-    transition: color 0.15s, border-color 0.15s;
-    text-transform: uppercase;
-  }
+    .api-control {
+      display: grid;
+      grid-template-columns: auto minmax(180px, 300px);
+      gap: 8px;
+      align-items: center;
+      padding: 6px 8px;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(23, 32, 42, 0.04);
+    }
 
-  .tab-btn:hover { color: var(--text); }
-  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .api-control label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
 
-  /* ── Sidebar scrollable body ── */
-  .aside-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
+    .api-control input {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      outline: none;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
 
-  .aside-body::-webkit-scrollbar { width: 4px; }
-  .aside-body::-webkit-scrollbar-track { background: transparent; }
-  .aside-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .btn {
+      min-height: 38px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      padding: 0 13px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 750;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+      white-space: nowrap;
+    }
 
-  .section-title {
-    font-size: 10px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 12px;
-  }
+    .btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
 
-  /* ── Config panels ── */
-  .panel { display: none; flex-direction: column; }
-  .panel.active { display: flex; }
+    .btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
 
-  .panel-desc {
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
+    .btn-primary {
+      border-color: var(--primary);
+      background: var(--primary);
+      color: #fff;
+    }
 
-  /* ── Config fields ── */
-  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-  .field label { font-size: 11px; color: var(--muted); letter-spacing: 0.5px; }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-strong);
+      color: #fff;
+    }
 
-  .field-row {
-    display: flex;
-    align-items: center;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
+    .btn-teal {
+      border-color: var(--teal);
+      background: var(--teal);
+      color: #fff;
+    }
 
-  .field-row input {
-    background: transparent;
-    border: none;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 14px;
-    padding: 10px 12px;
-    width: 100%;
-    outline: none;
-  }
+    .btn-teal:hover:not(:disabled) {
+      background: #086f65;
+      color: #fff;
+    }
 
-  .field-unit {
-    padding: 0 12px;
-    font-size: 11px;
-    color: var(--muted);
-    white-space: nowrap;
-  }
+    .btn-danger {
+      border-color: rgba(191, 47, 57, 0.28);
+      color: var(--red);
+      background: #fff;
+    }
 
-  /* ── Progress ── */
-  .progress-wrap {
-    background: var(--surface2);
-    border-radius: 4px;
-    height: 4px;
-    overflow: hidden;
-  }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 390px;
+      gap: 18px;
+      align-items: start;
+    }
 
-  .progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    border-radius: 4px;
-    transition: width 0.3s ease;
-    width: 0%;
-  }
+    .main-stack,
+    .side-stack {
+      display: grid;
+      gap: 18px;
+      min-width: 0;
+    }
 
-  .progress-label {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 6px;
-    display: flex;
-    justify-content: space-between;
-  }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
 
-  /* ── Buttons ── */
-  .btn {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    margin-bottom: 8px;
-  }
+    .metric {
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 10px 28px rgba(23, 32, 42, 0.05);
+      min-width: 0;
+    }
 
-  .btn:active { transform: scale(0.98); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
 
-  .btn-primary { background: var(--accent); color: white; }
-  .btn-primary:hover:not(:disabled) { background: #6a58ee; }
+    .metric strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 26px;
+      line-height: 1;
+    }
 
-  .btn-green {
-    background: rgba(0, 212, 170, 0.15);
-    color: var(--green);
-    border: 1px solid rgba(0, 212, 170, 0.3);
-  }
-  .btn-green:hover:not(:disabled) { background: rgba(0, 212, 170, 0.25); }
+    .metric small {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
-  .btn-yellow {
-    background: rgba(255, 179, 71, 0.15);
-    color: var(--yellow);
-    border: 1px solid rgba(255, 179, 71, 0.3);
-  }
-  .btn-yellow:hover:not(:disabled) { background: rgba(255, 179, 71, 0.25); }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
 
-  .btn-ghost {
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-  .btn-ghost:hover:not(:disabled) { border-color: var(--muted); color: var(--text); }
+    .panel-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-  /* ── Main ── */
-  main {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-width: 0;
-  }
+    .panel-title {
+      min-width: 0;
+    }
 
-  .log-header {
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-  }
+    .panel-title h2,
+    .panel-title h3 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.2;
+    }
 
-  .log-header-title {
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
+    .panel-title p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
 
-  .log-container {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 16px 24px;
-    font-size: 12px;
-    line-height: 2;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 28px;
+      border-radius: 999px;
+      padding: 0 10px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
 
-  .log-container::-webkit-scrollbar { width: 4px; }
-  .log-container::-webkit-scrollbar-track { background: transparent; }
-  .log-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
 
-  .log-line { display: flex; gap: 12px; align-items: baseline; min-width: 0; }
-  .log-time { color: var(--muted); font-size: 10px; white-space: nowrap; min-width: 60px; flex-shrink: 0; }
-  .log-msg { flex: 1; min-width: 0; overflow-wrap: break-word; word-break: break-word; }
+    .status-ok {
+      color: var(--green);
+      background: #e8f5ed;
+    }
 
-  .badge {
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.badge-compra   { background: rgba(124,106,255,0.2); color: #7c6aff; }
-.badge-leitura  { background: rgba(0,212,170,0.15);  color: #00d4aa; }
-.badge-evento   { background: rgba(255,179,71,0.15); color: #ffb347; }
-.badge-usuario  { background: rgba(255,77,106,0.15); color: #ff4d6a; }
+    .status-warn {
+      color: var(--amber);
+      background: #fff3df;
+    }
 
-  .log-ok { color: var(--green); }
-  .log-err { color: var(--red); }
-  .log-warn { color: var(--yellow); }
-  .log-info { color: var(--accent); }
-  .log-sep { color: var(--border); }
+    .status-off {
+      color: var(--red);
+      background: #ffecee;
+    }
 
-  /* ── Throughput chart ── */
-  .chart-section {
-    border-top: 1px solid var(--border);
-    padding: 16px 24px;
-    height: 100px;
-    flex-shrink: 0;
-  }
+    .event-grid {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+    }
 
-  .chart-label {
-    font-size: 10px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
+    .event-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 14px;
+      display: grid;
+      gap: 13px;
+      min-width: 0;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
 
-  canvas { width: 100%; height: 60px; display: block; }
-</style>
+    .event-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 12px 28px rgba(25, 87, 166, 0.1);
+    }
+
+    .event-card.selected {
+      border-color: var(--primary);
+      box-shadow: inset 0 0 0 1px var(--primary), 0 12px 28px rgba(25, 87, 166, 0.13);
+    }
+
+    .event-name {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+
+    .event-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tag {
+      min-height: 24px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+      display: inline-flex;
+      align-items: center;
+      padding: 0 8px;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .tag-green {
+      color: var(--green);
+      background: #e8f5ed;
+      border-color: #b8dfc7;
+    }
+
+    .tag-amber {
+      color: var(--amber);
+      background: #fff3df;
+      border-color: #f1cd95;
+    }
+
+    .event-footer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .price {
+      font-size: 20px;
+      font-weight: 850;
+      line-height: 1;
+    }
+
+    .price span {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .empty {
+      grid-column: 1 / -1;
+      padding: 40px 20px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line-strong);
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+    }
+
+    .form {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--ink);
+      padding: 0 10px;
+      outline: none;
+      min-width: 0;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(25, 87, 166, 0.12);
+    }
+
+    .total-box {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+    }
+
+    .total-box span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .total-box strong {
+      font-size: 22px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tab {
+      border: 0;
+      border-right: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      min-height: 42px;
+      font-weight: 800;
+    }
+
+    .tab:last-child {
+      border-right: 0;
+    }
+
+    .tab.active {
+      color: var(--primary);
+      box-shadow: inset 0 -3px 0 var(--primary);
+    }
+
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    .admin-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .sim-controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .progress-wrap {
+      height: 8px;
+      background: var(--panel-soft);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--primary), var(--teal));
+      transition: width 0.22s ease;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .log {
+      height: 248px;
+      overflow: auto;
+      padding: 10px 12px;
+      background: #111827;
+      color: #d7dee8;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.7;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    .log-line {
+      display: grid;
+      grid-template-columns: 68px 74px minmax(0, 1fr);
+      gap: 8px;
+      align-items: baseline;
+    }
+
+    .log-time {
+      color: #8fa1b7;
+    }
+
+    .log-kind {
+      color: #b6c4d5;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .log-ok {
+      color: #7dd3a7;
+    }
+
+    .log-error {
+      color: #ff9ca5;
+    }
+
+    .log-warn {
+      color: #ffd188;
+    }
+
+    .log-info {
+      color: #9bc8ff;
+    }
+
+    .chart-wrap {
+      padding: 12px 16px 16px;
+      border-top: 1px solid var(--line);
+    }
+
+    .chart-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 76px;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(22px);
+      min-width: min(420px, calc(100vw - 32px));
+      max-width: calc(100vw - 32px);
+      border-radius: var(--radius);
+      background: #17202a;
+      color: #fff;
+      padding: 12px 14px;
+      box-shadow: 0 16px 40px rgba(23, 32, 42, 0.24);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+      font-weight: 700;
+      z-index: 10;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 1140px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .side-stack {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .shell {
+        width: min(100% - 20px, 1460px);
+        padding-top: 10px;
+      }
+
+      .topbar,
+      .metrics,
+      .side-stack,
+      .form-grid,
+      .sim-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions,
+      .panel-header {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .api-control {
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
+
+      .btn {
+        width: 100%;
+      }
+
+      .event-footer,
+      .admin-row,
+      .total-box {
+        grid-template-columns: 1fr;
+      }
+
+      .tabs {
+        grid-template-columns: 1fr;
+      }
+
+      .tab {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .log-line {
+        grid-template-columns: 60px minmax(0, 1fr);
+      }
+
+      .log-kind {
+        display: none;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">A3</div>
+        <div>
+          <h1>Ingressos Distribuídos</h1>
+          <p>Eventos, compras, fila de notificação e observabilidade em uma tela.</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="api-control">
+          <label for="api-base">API</label>
+          <input id="api-base" type="text" spellcheck="false">
+        </div>
+        <button class="btn" id="btn-health" type="button">Verificar</button>
+        <button class="btn btn-primary" id="btn-refresh" type="button">Atualizar eventos</button>
+      </div>
+    </header>
 
-<header>
-  <div class="logo">A3<span>://</span>simulator</div>
-  <div class="status-pill"><div class="dot"></div>ONLINE</div>
-  <div class="stats-header">
-    <div class="stat-item">
-      <div class="stat-label">Sucesso</div>
-      <div class="stat-value green" id="count-ok">0</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-label">Erro</div>
-      <div class="stat-value red" id="count-err">0</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-label">Total</div>
-      <div class="stat-value" id="count-total">0</div>
+    <section class="metrics" aria-label="Resumo">
+      <div class="metric">
+        <span>API Gateway</span>
+        <strong id="metric-api">--</strong>
+        <small id="metric-api-detail">Aguardando verificação</small>
+      </div>
+      <div class="metric">
+        <span>Eventos</span>
+        <strong id="metric-events">0</strong>
+        <small id="metric-events-detail">Nenhum carregado</small>
+      </div>
+      <div class="metric">
+        <span>Ingressos</span>
+        <strong id="metric-tickets">0</strong>
+        <small id="metric-tickets-detail">Disponíveis no catálogo</small>
+      </div>
+      <div class="metric">
+        <span>Compras</span>
+        <strong id="metric-purchases">0</strong>
+        <small id="metric-purchases-detail">Confirmadas nesta sessão</small>
+      </div>
+    </section>
+
+    <div class="layout" style="margin-top:18px">
+      <main class="main-stack">
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h2>Catálogo de eventos</h2>
+              <p id="catalog-subtitle">Conecte na API para carregar os eventos.</p>
+            </div>
+            <span class="status status-warn" id="catalog-status">Sem dados</span>
+          </div>
+          <div class="event-grid" id="event-grid"></div>
+        </section>
+
+        <section class="panel">
+          <div class="tabs" role="tablist" aria-label="Administração">
+            <button class="tab active" type="button" data-tab="novo-evento">Novo evento</button>
+            <button class="tab" type="button" data-tab="novo-usuario">Novo usuário</button>
+            <button class="tab" type="button" data-tab="ajustes">Ajustes</button>
+          </div>
+
+          <div class="tab-panel active" id="tab-novo-evento">
+            <form class="form" id="form-evento">
+              <div class="form-grid">
+                <div class="field">
+                  <label for="evento-nome">Nome</label>
+                  <input id="evento-nome" type="text" value="Festival Dev Cloud" required>
+                </div>
+                <div class="field">
+                  <label for="evento-data">Data</label>
+                  <input id="evento-data" type="date" value="2026-09-18" required>
+                </div>
+                <div class="field">
+                  <label for="evento-valor">Valor</label>
+                  <input id="evento-valor" type="number" min="1" step="0.01" value="120.00" required>
+                </div>
+                <div class="field">
+                  <label for="evento-quantidade">Ingressos</label>
+                  <input id="evento-quantidade" type="number" min="1" step="1" value="160" required>
+                </div>
+              </div>
+              <button class="btn btn-primary" type="submit">Criar evento</button>
+            </form>
+          </div>
+
+          <div class="tab-panel" id="tab-novo-usuario">
+            <form class="form" id="form-usuario">
+              <div class="form-grid">
+                <div class="field">
+                  <label for="usuario-nome">Nome</label>
+                  <input id="usuario-nome" type="text" value="Cliente Demo" required>
+                </div>
+                <div class="field">
+                  <label for="usuario-email">E-mail</label>
+                  <input id="usuario-email" type="email" value="cliente.demo@email.com" required>
+                </div>
+                <div class="field">
+                  <label for="usuario-senha">Senha</label>
+                  <input id="usuario-senha" type="password" value="senha123" required>
+                </div>
+                <div class="field">
+                  <label for="usuario-local-id">ID manual</label>
+                  <input id="usuario-local-id" type="number" min="1" placeholder="Opcional">
+                </div>
+              </div>
+              <button class="btn btn-teal" type="submit">Criar usuário</button>
+            </form>
+          </div>
+
+          <div class="tab-panel" id="tab-ajustes">
+            <form class="form" id="form-ajustes">
+              <div class="field">
+                <label for="ajuste-evento">Evento</label>
+                <select id="ajuste-evento"></select>
+              </div>
+              <div class="admin-row">
+                <div class="field">
+                  <label for="ajuste-quantidade">Nova quantidade</label>
+                  <input id="ajuste-quantidade" type="number" min="0" step="1" value="100">
+                </div>
+                <button class="btn" type="button" id="btn-ajustar-quantidade">Atualizar lote</button>
+              </div>
+              <div class="admin-row">
+                <div class="field">
+                  <label for="ajuste-valor">Novo valor</label>
+                  <input id="ajuste-valor" type="number" min="1" step="0.01" value="99.90">
+                </div>
+                <button class="btn" type="button" id="btn-ajustar-valor">Atualizar valor</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h2>Simulação distribuída</h2>
+              <p>Gera carga nos serviços de eventos, compras e notificações.</p>
+            </div>
+            <button class="btn btn-danger" id="btn-clear-log" type="button">Limpar console</button>
+          </div>
+          <div class="form">
+            <div class="sim-controls">
+              <div class="field">
+                <label for="sim-compras">Compras</label>
+                <input id="sim-compras" type="number" min="1" max="500" value="15">
+              </div>
+              <div class="field">
+                <label for="sim-leituras">Leituras</label>
+                <input id="sim-leituras" type="number" min="1" max="500" value="20">
+              </div>
+              <div class="field">
+                <label for="sim-delay">Delay</label>
+                <input id="sim-delay" type="number" min="0" max="5000" step="50" value="200">
+              </div>
+            </div>
+            <div class="sim-controls">
+              <button class="btn" type="button" id="btn-seed">Popular dados</button>
+              <button class="btn btn-teal" type="button" id="btn-run-compras">Simular compras</button>
+              <button class="btn btn-primary" type="button" id="btn-run-full">Rodar completo</button>
+            </div>
+            <div>
+              <div class="progress-wrap" aria-label="Progresso">
+                <div class="progress-bar" id="progress-bar"></div>
+              </div>
+              <div class="progress-meta">
+                <span id="progress-label">Aguardando execução</span>
+                <span id="progress-value">0%</span>
+              </div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-title">
+              <span>Throughput</span>
+              <span id="throughput-label">0 req/s</span>
+            </div>
+            <canvas id="chart" width="720" height="152"></canvas>
+          </div>
+          <div class="log" id="log" aria-live="polite"></div>
+        </section>
+      </main>
+
+      <aside class="side-stack">
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h3>Checkout</h3>
+              <p>Compra com idempotência por transação.</p>
+            </div>
+            <span class="status status-warn" id="checkout-status">Pendente</span>
+          </div>
+          <form class="form" id="form-compra">
+            <div class="field">
+              <label for="compra-evento">Evento</label>
+              <select id="compra-evento" required></select>
+            </div>
+            <div class="field">
+              <label for="compra-usuario">Usuário</label>
+              <select id="compra-usuario" required></select>
+            </div>
+            <div class="form-grid">
+              <div class="field">
+                <label for="compra-quantidade">Quantidade</label>
+                <input id="compra-quantidade" type="number" min="1" step="1" value="1" required>
+              </div>
+              <div class="field">
+                <label for="compra-metodo">Pagamento</label>
+                <select id="compra-metodo">
+                  <option value="pix">Pix</option>
+                  <option value="boleto">Boleto</option>
+                  <option value="cartao">Cartão</option>
+                </select>
+              </div>
+            </div>
+            <div class="total-box">
+              <span>Total</span>
+              <strong id="compra-total">R$ 0,00</strong>
+            </div>
+            <button class="btn btn-primary" type="submit">Confirmar compra</button>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h3>Usuários locais</h3>
+              <p>IDs disponíveis para o serviço de compras.</p>
+            </div>
+            <button class="btn" type="button" id="btn-add-demo-users">Demo</button>
+          </div>
+          <div class="form" id="user-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <h3>Última compra</h3>
+              <p id="last-purchase-subtitle">Nenhuma compra confirmada.</p>
+            </div>
+          </div>
+          <div class="form" id="last-purchase"></div>
+        </section>
+      </aside>
     </div>
   </div>
-</header>
 
-<aside>
-  <nav class="tab-nav">
-    <button class="tab-btn active" data-tab="setup">Setup</button>
-    <button class="tab-btn" data-tab="compras">Compras</button>
-    <button class="tab-btn" data-tab="leituras">Leituras</button>
-    <button class="tab-btn" data-tab="completo">Completo</button>
-  </nav>
+  <div class="toast" id="toast"></div>
 
-  <div class="aside-body">
+  <script>
+    const DEMO_EVENTS = [
+      { nome: "Show do Metallica", data: "2026-08-10", valor: 250, quantidade: 100 },
+      { nome: "Festival de Jazz", data: "2026-07-20", valor: 80, quantidade: 200 },
+      { nome: "Peça de Teatro", data: "2026-09-05", valor: 50, quantidade: 150 },
+      { nome: "Stand Up Comedy", data: "2026-06-30", valor: 60, quantidade: 80 },
+      { nome: "Show de Rock Nacional", data: "2026-10-15", valor: 120, quantidade: 300 }
+    ];
 
-    <!-- Setup panel -->
-    <div id="panel-setup" class="panel active">
-      <div class="section-title">Setup Inicial</div>
-      <p class="panel-desc">Cria os eventos e usuários base necessários para as simulações. Usuários já existentes são ignorados (HTTP 409).</p>
-    </div>
+    const DEMO_USERS = [
+      { id: 1, nome: "João Silva", email: "joao@email.com", senha: "senha123" },
+      { id: 2, nome: "Maria Souza", email: "maria@email.com", senha: "senha123" },
+      { id: 3, nome: "Pedro Lima", email: "pedro@email.com", senha: "senha123" },
+      { id: 4, nome: "Ana Costa", email: "ana@email.com", senha: "senha123" },
+      { id: 5, nome: "Lucas Martins", email: "lucas@email.com", senha: "senha123" }
+    ];
 
-    <!-- Compras panel -->
-    <div id="panel-compras" class="panel">
-      <div class="section-title">Configuração</div>
-      <div class="field">
-        <label>Número de compras</label>
-        <div class="field-row">
-          <input type="number" id="cfg-compras" value="15" min="1" max="500">
-          <span class="field-unit">req</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Delay entre requisições</label>
-        <div class="field-row">
-          <input type="number" id="cfg-delay" value="200" min="0" max="5000" step="50">
-          <span class="field-unit">ms</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Leituras panel -->
-    <div id="panel-leituras" class="panel">
-      <div class="section-title">Configuração</div>
-      <div class="field">
-        <label>Número de leituras</label>
-        <div class="field-row">
-          <input type="number" id="cfg-leituras" value="20" min="1" max="500">
-          <span class="field-unit">req</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Delay entre requisições</label>
-        <div class="field-row">
-          <input type="number" id="cfg-delay-leituras" value="200" min="0" max="5000" step="50">
-          <span class="field-unit">ms</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Completo panel -->
-    <div id="panel-completo" class="panel">
-      <div class="section-title">Configuração</div>
-      <div class="field">
-        <label>Compras</label>
-        <div class="field-row">
-          <input type="number" id="cfg-compras-completo" value="15" min="1" max="500">
-          <span class="field-unit">req</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Leituras</label>
-        <div class="field-row">
-          <input type="number" id="cfg-leituras-completo" value="20" min="1" max="500">
-          <span class="field-unit">req</span>
-        </div>
-      </div>
-      <div class="field">
-        <label>Delay entre requisições</label>
-        <div class="field-row">
-          <input type="number" id="cfg-delay-completo" value="200" min="0" max="5000" step="50">
-          <span class="field-unit">ms</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Shared progress (único no DOM) -->
-    <div>
-      <div class="section-title">Progresso</div>
-      <div class="progress-wrap">
-        <div class="progress-bar" id="progress-bar"></div>
-      </div>
-      <div class="progress-label">
-        <span id="progress-text">Aguardando</span>
-        <span id="progress-pct">—</span>
-      </div>
-    </div>
-
-    <!-- Shared action buttons -->
-    <div>
-      <div class="section-title">Ação</div>
-      <button id="btn-run" class="btn btn-ghost" onclick="runActive()">⬡ Setup inicial</button>
-      <button class="btn btn-ghost" onclick="clearLog()" style="margin-top:0">✕ Limpar log</button>
-    </div>
-
-  </div>
-</aside>
-
-<!-- Shared main: log e chart são únicos no DOM -->
-<main>
-  <div class="log-header">
-    <span class="log-header-title">Output</span>
-    <span class="log-header-title" id="running-label" style="color:var(--accent)"></span>
-  </div>
-  <div class="log-container" id="log"></div>
-  <div class="chart-section">
-    <div class="chart-label">Throughput (req/s)</div>
-    <canvas id="chart"></canvas>
-  </div>
-</main>
-
-<script>
-const BASE = 'http://localhost';
-const EVENTOS = [
-  {nome:'Show do Metallica',data:'2026-08-10',valor:250.0,quantidade:100},
-  {nome:'Festival de Jazz',data:'2026-07-20',valor:80.0,quantidade:200},
-  {nome:'Peça de Teatro',data:'2026-09-05',valor:50.0,quantidade:150},
-  {nome:'Stand Up Comedy',data:'2026-06-30',valor:60.0,quantidade:80},
-  {nome:'Show de Rock Nacional',data:'2026-10-15',valor:120.0,quantidade:300},
-];
-const USUARIOS = [
-  {nome:'João Silva',email:'joao@email.com',senha:'senha123'},
-  {nome:'Maria Souza',email:'maria@email.com',senha:'senha123'},
-  {nome:'Pedro Lima',email:'pedro@email.com',senha:'senha123'},
-  {nome:'Ana Costa',email:'ana@email.com',senha:'senha123'},
-  {nome:'Lucas Martins',email:'lucas@email.com',senha:'senha123'},
-];
-const METODOS = ['pix','boleto','cartao'];
-
-let okCount = 0, errCount = 0, total = 0;
-const throughputData = new Array(40).fill(0);
-let reqsThisSec = 0;
-let activeTab = 'setup';
-
-// ── Tab switching ────────────────────────────────────────────────────────────
-const TAB_META = {
-  setup:    { label: '⬡ Setup inicial',       cls: 'btn-ghost'   },
-  compras:  { label: '↑ Simular compras',      cls: 'btn-green'   },
-  leituras: { label: '↓ Simular leituras',     cls: 'btn-yellow'  },
-  completo: { label: '◈ Simulação completa',   cls: 'btn-primary' },
-};
-
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tab = btn.dataset.tab;
-    if (tab === activeTab) return;
-    document.querySelector('.tab-btn.active').classList.remove('active');
-    document.querySelector('.panel.active').classList.remove('active');
-    btn.classList.add('active');
-    document.getElementById('panel-' + tab).classList.add('active');
-    activeTab = tab;
-    const runBtn = document.getElementById('btn-run');
-    runBtn.textContent = TAB_META[tab].label;
-    runBtn.className = 'btn ' + TAB_META[tab].cls;
-  });
-});
-
-function runActive() {
-  const actions = { setup: runSetup, compras: runCompras, leituras: runLeituras, completo: runCompleto };
-  actions[activeTab]?.();
-}
-
-// ── Throughput ticker ────────────────────────────────────────────────────────
-setInterval(() => {
-  throughputData.push(reqsThisSec);
-  throughputData.shift();
-  reqsThisSec = 0;
-  drawChart();
-}, 1000);
-
-// ── Utilities ────────────────────────────────────────────────────────────────
-function uuid() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-    const r = Math.random()*16|0;
-    return (c==='x'?r:(r&0x3|0x8)).toString(16);
-  });
-}
-
-function now() {
-  return new Date().toTimeString().slice(0,8);
-}
-
-function log(msg, type='', badge='') {
-  const el = document.getElementById('log');
-  const line = document.createElement('div');
-  line.className = 'log-line';
-  const badgeHtml = badge
-    ? `<span class="badge badge-${badge}">${badge.toUpperCase()}</span>`
-    : '';
-  line.innerHTML = `<span class="log-time">${now()}</span>${badgeHtml}<span class="log-msg log-${type}">${msg}</span>`;
-  el.appendChild(line);
-  el.scrollTop = el.scrollHeight;
-}
-
-function sep(title) {
-  log(`── ${title} ${'─'.repeat(Math.max(0,36-title.length))}`, 'sep');
-}
-
-function clearLog() {
-  document.getElementById('log').innerHTML = '';
-  okCount = 0; errCount = 0; total = 0;
-  updateStats();
-  setProgress(0, 'Aguardando', '—');
-}
-
-function updateStats() {
-  document.getElementById('count-ok').textContent = okCount;
-  document.getElementById('count-err').textContent = errCount;
-  document.getElementById('count-total').textContent = total;
-}
-
-function incOk() { okCount++; total++; reqsThisSec++; updateStats(); }
-function incErr() { errCount++; total++; reqsThisSec++; updateStats(); }
-
-function setProgress(pct, label, pctLabel) {
-  document.getElementById('progress-bar').style.width = pct + '%';
-  document.getElementById('progress-text').textContent = label;
-  document.getElementById('progress-pct').textContent = pctLabel;
-}
-
-function setRunning(label) {
-  document.getElementById('running-label').textContent = label ? '● ' + label : '';
-}
-
-function setIdle() {
-  document.getElementById('running-label').textContent = '';
-}
-
-function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-async function post(url, body) {
-  const r = await fetch(BASE + url, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(body)
-  });
-  return {status: r.status, data: await r.json()};
-}
-
-async function get(url) {
-  const r = await fetch(BASE + url);
-  return {status: r.status, data: await r.json()};
-}
-
-// ── Simulation functions ─────────────────────────────────────────────────────
-async function runSetup() {
-
-  setRunning('Setup');
-  sep('Criando eventos');
-  for (const e of EVENTOS) {
-    try {
-      const {status, data} = await post('/eventos', e);
-      if (status === 201) { log(`✓ ${e.nome} (id=${data.id})`, 'ok', 'evento'); incOk(); }
-      else { log(`✗ ${e.nome} — ${status}`, 'err', 'evento'); incErr(); }
-    } catch { log(`✗ ${e.nome} — conexão recusada`, 'err', 'evento'); incErr(); }
-  }
-  sep('Criando usuários');
-  for (const u of USUARIOS) {
-    try {
-      const {status, data} = await post('/usuarios', u);
-      if (status === 201) { log(`✓ ${u.nome} (id=${data.id})`, 'ok', 'usuario'); incOk(); }
-      else if (status === 409) { log(`~ ${u.nome} já existe`, 'warn', 'usuario'); }
-      else { log(`✗ ${u.nome} — ${status}`, 'err', 'usuario'); incErr(); }
-    } catch { log(`✗ ${u.nome} — conexão recusada`, 'err', 'usuario'); incErr(); }
-  }
-  setIdle();
-  setProgress(100, 'Setup concluído', '100%');
-  }
-
-  async function runCompras() {
-
-  setRunning('Compras');
-  const n = parseInt(document.getElementById('cfg-compras').value) || 15;
-  const ms = parseInt(document.getElementById('cfg-delay').value) || 200;
-  sep(`Simulando ${n} compras`);
-
-  let eventos = [];
-  try {
-    const {data} = await get('/eventos/');
-    eventos = data.filter(e => e.quantidade > 0).map(e => e.id);
-  } catch { log('✗ Não foi possível buscar eventos.', 'err'); setIdle(); return; }
-
-  if (!eventos.length) { log('✗ Nenhum evento disponível. Faça o setup primeiro.', 'err'); setIdle(); return; }
-
-  const usuarioIds = [1,2,3,4,5];
-  let s = 0, f = 0;
-
-  for (let i = 0; i < n; i++) {
-    const body = {
-      transaction_id: uuid(),
-      usuario_id: usuarioIds[Math.floor(Math.random()*usuarioIds.length)],
-      evento_id: eventos[Math.floor(Math.random()*eventos.length)],
-      quantidade: Math.floor(Math.random()*3)+1,
-      metodo_pagamento: METODOS[Math.floor(Math.random()*METODOS.length)],
+    const state = {
+      apiBase: detectApiBase(),
+      events: [],
+      users: loadJson("a3-users", []),
+      selectedEventId: null,
+      purchases: loadJson("a3-purchases", []),
+      apiOnline: false,
+      busy: false,
+      reqsThisSecond: 0,
+      throughput: new Array(36).fill(0)
     };
-    try {
-      const {status, data} = await post('/compras', body);
-      if (status === 201) {
-        s++; incOk();
-        log(`✓ ${i+1}/${n} — evento ${body.evento_id} via ${body.metodo_pagamento}`, 'ok', 'compra');
-      } else {
-        f++; incErr();
-        log(`✗ ${i+1}/${n} — ${data.detail || status}`, 'err', 'compra');
+
+    const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+    const dateFmt = new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" });
+
+    const el = {
+      apiBase: document.getElementById("api-base"),
+      metricApi: document.getElementById("metric-api"),
+      metricApiDetail: document.getElementById("metric-api-detail"),
+      metricEvents: document.getElementById("metric-events"),
+      metricEventsDetail: document.getElementById("metric-events-detail"),
+      metricTickets: document.getElementById("metric-tickets"),
+      metricTicketsDetail: document.getElementById("metric-tickets-detail"),
+      metricPurchases: document.getElementById("metric-purchases"),
+      metricPurchasesDetail: document.getElementById("metric-purchases-detail"),
+      eventGrid: document.getElementById("event-grid"),
+      catalogSubtitle: document.getElementById("catalog-subtitle"),
+      catalogStatus: document.getElementById("catalog-status"),
+      checkoutStatus: document.getElementById("checkout-status"),
+      compraEvento: document.getElementById("compra-evento"),
+      compraUsuario: document.getElementById("compra-usuario"),
+      compraQuantidade: document.getElementById("compra-quantidade"),
+      compraMetodo: document.getElementById("compra-metodo"),
+      compraTotal: document.getElementById("compra-total"),
+      ajusteEvento: document.getElementById("ajuste-evento"),
+      userList: document.getElementById("user-list"),
+      lastPurchase: document.getElementById("last-purchase"),
+      lastPurchaseSubtitle: document.getElementById("last-purchase-subtitle"),
+      log: document.getElementById("log"),
+      progressBar: document.getElementById("progress-bar"),
+      progressLabel: document.getElementById("progress-label"),
+      progressValue: document.getElementById("progress-value"),
+      throughputLabel: document.getElementById("throughput-label"),
+      chart: document.getElementById("chart"),
+      toast: document.getElementById("toast")
+    };
+
+    el.apiBase.value = state.apiBase;
+
+    document.getElementById("btn-health").addEventListener("click", checkHealth);
+    document.getElementById("btn-refresh").addEventListener("click", refreshEvents);
+    document.getElementById("btn-seed").addEventListener("click", seedData);
+    document.getElementById("btn-run-compras").addEventListener("click", () => runPurchases(readInt("sim-compras", 15)));
+    document.getElementById("btn-run-full").addEventListener("click", runFullSimulation);
+    document.getElementById("btn-clear-log").addEventListener("click", clearLog);
+    document.getElementById("btn-add-demo-users").addEventListener("click", addDemoUsers);
+    document.getElementById("form-evento").addEventListener("submit", createEvent);
+    document.getElementById("form-usuario").addEventListener("submit", createUser);
+    document.getElementById("form-compra").addEventListener("submit", createPurchase);
+    document.getElementById("btn-ajustar-quantidade").addEventListener("click", updateEventQuantity);
+    document.getElementById("btn-ajustar-valor").addEventListener("click", updateEventValue);
+    el.compraEvento.addEventListener("change", () => {
+      state.selectedEventId = Number(el.compraEvento.value) || null;
+      renderEvents();
+      renderCheckout();
+    });
+    el.compraUsuario.addEventListener("change", renderCheckout);
+    el.compraQuantidade.addEventListener("input", renderCheckout);
+    el.apiBase.addEventListener("change", () => {
+      state.apiBase = normalizeBase(el.apiBase.value);
+      el.apiBase.value = state.apiBase;
+      localStorage.setItem("a3-api-base", state.apiBase);
+      checkHealth();
+    });
+
+    document.querySelectorAll(".tab").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelector(".tab.active").classList.remove("active");
+        document.querySelector(".tab-panel.active").classList.remove("active");
+        button.classList.add("active");
+        document.getElementById("tab-" + button.dataset.tab).classList.add("active");
+      });
+    });
+
+    setInterval(() => {
+      state.throughput.push(state.reqsThisSecond);
+      state.throughput.shift();
+      el.throughputLabel.textContent = state.reqsThisSecond + " req/s";
+      state.reqsThisSecond = 0;
+      drawChart();
+    }, 1000);
+
+    renderAll();
+    log("Interface carregada. API configurada em " + state.apiBase + ".", "info", "app");
+    checkHealth();
+
+    function detectApiBase() {
+      const params = new URLSearchParams(window.location.search);
+      const fromQuery = params.get("api");
+      if (fromQuery) return normalizeBase(fromQuery);
+      const stored = localStorage.getItem("a3-api-base");
+      if (stored) return normalizeBase(stored);
+      if (window.location.protocol === "file:") return "http://localhost";
+      if (["localhost", "127.0.0.1", "::1"].includes(window.location.hostname) && window.location.port) {
+        return window.location.protocol + "//" + window.location.hostname;
       }
-    } catch { f++; incErr(); log(`✗ ${i+1}/${n} — timeout`, 'err', 'compra'); }
-    setProgress(Math.round((i+1)/n*100), `Compra ${i+1}/${n}`, `${Math.round((i+1)/n*100)}%`);
-    await delay(ms);
-  }
-  log(`→ ${s} sucesso / ${f} falha`, 'info');
-  setIdle();
-  }
+      return window.location.origin;
+    }
 
-  async function runLeituras() {
+    function normalizeBase(value) {
+      return String(value || "http://localhost").trim().replace(/\/+$/, "");
+    }
 
-  setRunning('Leituras');
-  const n = parseInt(document.getElementById('cfg-leituras').value) || 20;
-  const ms = parseInt(document.getElementById('cfg-delay-leituras').value) || 200;
-  sep(`Simulando ${n} leituras`);
-  for (let i = 0; i < n; i++) {
-    try {
-      const {status} = await get('/eventos/');
-      log(`✓ GET /eventos/ — ${status} (${i+1}/${n})`, 'ok', 'leitura'); incOk();
-    } catch { log(`✗ GET /eventos/ — timeout`, 'err', 'leitura'); incErr(); }
-    setProgress(Math.round((i+1)/n*100), `Leitura ${i+1}/${n}`, `${Math.round((i+1)/n*100)}%`);
-    await delay(ms);
-  }
-  setIdle();
-  }
+    function loadJson(key, fallback) {
+      try {
+        const value = localStorage.getItem(key);
+        return value ? JSON.parse(value) : fallback;
+      } catch {
+        return fallback;
+      }
+    }
 
-  async function runCompleto() {
+    function saveLocalState() {
+      localStorage.setItem("a3-users", JSON.stringify(state.users));
+      localStorage.setItem("a3-purchases", JSON.stringify(state.purchases.slice(-20)));
+    }
 
-  setRunning('Simulação completa');
+    async function api(path, options = {}) {
+      const response = await fetch(state.apiBase + path, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        }
+      });
+      state.reqsThisSecond++;
+      let data = null;
+      const text = await response.text();
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = text;
+        }
+      }
+      if (!response.ok) {
+        const detail = data && data.detail ? data.detail : "HTTP " + response.status;
+        const error = new Error(detail);
+        error.status = response.status;
+        error.data = data;
+        throw error;
+      }
+      return data;
+    }
 
-  sep('Criando eventos');
-  for (const e of EVENTOS) {
-    try {
-      const {status, data} = await post('/eventos', e);
-      if (status === 201) { log(`✓ ${e.nome} (id=${data.id})`, 'ok', 'evento'); incOk(); }
-      else { log(`✗ ${e.nome} — ${status}`, 'err', 'evento'); incErr(); }
-    } catch { log(`✗ ${e.nome} — conexão recusada`, 'err', 'evento'); incErr(); }
-  }
+    function apiPost(path, body) {
+      return api(path, { method: "POST", body: JSON.stringify(body) });
+    }
 
-  sep('Criando usuários');
-  for (const u of USUARIOS) {
-    try {
-      const {status, data} = await post('/usuarios', u);
-      if (status === 201) { log(`✓ ${u.nome} (id=${data.id})`, 'ok', 'usuario'); incOk(); }
-      else if (status === 409) { log(`~ ${u.nome} já existe`, 'warn', 'usuario'); }
-      else { log(`✗ ${u.nome} — ${status}`, 'err', 'usuario'); incErr(); }
-    } catch { log(`✗ ${u.nome} — conexão recusada`, 'err', 'usuario'); incErr(); }
-  }
+    function apiPut(path, body) {
+      return api(path, { method: "PUT", body: JSON.stringify(body) });
+    }
 
-  const n_l = parseInt(document.getElementById('cfg-leituras-completo').value) || 20;
-  const n_c = parseInt(document.getElementById('cfg-compras-completo').value) || 15;
-  const ms  = parseInt(document.getElementById('cfg-delay-completo').value)   || 200;
+    async function checkHealth() {
+      setApiStatus("warn", "Verificando", "Consultando serviços");
+      try {
+        await api("/eventos");
+        try {
+          await api("/compras/0");
+        } catch (error) {
+          if (error.status !== 404) throw error;
+        }
+        state.apiOnline = true;
+        setApiStatus("ok", "Online", "Eventos e compras respondendo");
+        log("Gateway online.", "ok", "api");
+        await refreshEvents(false);
+      } catch (error) {
+        state.apiOnline = false;
+        setApiStatus("off", "Offline", error.message || "Falha de conexão");
+        updateCatalogStatus("off", "API offline");
+        log("API indisponível: " + (error.message || "falha de conexão") + ".", "error", "api");
+        renderAll();
+      }
+    }
 
-  sep(`Simulando ${n_l} leituras`);
-  for (let i = 0; i < n_l; i++) {
-    try {
-      const {status} = await get('/eventos/');
-      log(`✓ GET /eventos/ — ${status} (${i+1}/${n_l})`, 'ok', 'leitura'); incOk();
-    } catch { log(`✗ GET /eventos/ — timeout`, 'err', 'leitura'); incErr(); }
-    setProgress(Math.round((i+1)/n_l*100), `Leitura ${i+1}/${n_l}`, `${Math.round((i+1)/n_l*100)}%`);
-    await delay(ms);
-  }
+    async function refreshEvents(showToast = true) {
+      try {
+        const events = await api("/eventos");
+        state.events = Array.isArray(events) ? events : [];
+        if (!state.selectedEventId && state.events.length) {
+          state.selectedEventId = state.events[0].id;
+        }
+        updateCatalogStatus(state.events.length ? "ok" : "warn", state.events.length ? "Carregado" : "Vazio");
+        el.catalogSubtitle.textContent = state.events.length
+          ? state.events.length + " evento(s) encontrado(s) no serviço de eventos."
+          : "Nenhum evento cadastrado.";
+        renderAll();
+        log("Eventos atualizados: " + state.events.length + ".", "ok", "eventos");
+        if (showToast) toast("Eventos atualizados.");
+      } catch (error) {
+        updateCatalogStatus("off", "Erro");
+        log("Falha ao carregar eventos: " + error.message + ".", "error", "eventos");
+        if (showToast) toast("Não foi possível carregar eventos.");
+      }
+    }
 
-  sep(`Simulando ${n_c} compras`);
-  let eventos = [];
-  try {
-    const {data} = await get('/eventos/');
-    eventos = data.filter(e => e.quantidade > 0).map(e => e.id);
-  } catch { log('✗ Não foi possível buscar eventos.', 'err'); setIdle(); return; }
+    async function createEvent(event) {
+      event.preventDefault();
+      const body = {
+        nome: value("evento-nome"),
+        data: value("evento-data"),
+        valor: readFloat("evento-valor", 0),
+        quantidade: readInt("evento-quantidade", 1)
+      };
+      try {
+        const created = await apiPost("/eventos", body);
+        log("Evento criado: " + created.nome + " (id=" + created.id + ").", "ok", "eventos");
+        toast("Evento criado.");
+        await refreshEvents(false);
+        state.selectedEventId = created.id;
+        renderAll();
+      } catch (error) {
+        log("Erro ao criar evento: " + error.message + ".", "error", "eventos");
+        toast("Erro ao criar evento.");
+      }
+    }
 
-  const usuarioIds = [1,2,3,4,5];
-  let s = 0, f = 0;
-  for (let i = 0; i < n_c; i++) {
-    const body = {
-      transaction_id: uuid(),
-      usuario_id: usuarioIds[Math.floor(Math.random()*usuarioIds.length)],
-      evento_id: eventos[Math.floor(Math.random()*eventos.length)],
-      quantidade: Math.floor(Math.random()*3)+1,
-      metodo_pagamento: METODOS[Math.floor(Math.random()*METODOS.length)],
-    };
-    try {
-      const {status, data} = await post('/compras', body);
-      if (status === 201) { s++; incOk(); log(`✓ ${i+1}/${n_c} — evento ${body.evento_id} via ${body.metodo_pagamento}`, 'ok', 'compra'); }
-      else { f++; incErr(); log(`✗ ${i+1}/${n_c} — ${data.detail || status}`, 'err', 'compra'); }
-    } catch { f++; incErr(); log(`✗ ${i+1}/${n_c} — timeout`, 'err', 'compra'); }
-    setProgress(Math.round((i+1)/n_c*100), `Compra ${i+1}/${n_c}`, `${Math.round((i+1)/n_c*100)}%`);
-    await delay(ms);
-  }
-  log(`→ ${s} sucesso / ${f} falha`, 'info');
-  log('✓ Simulação completa finalizada.', 'info');
-  setIdle();
-}
+    async function createUser(event) {
+      event.preventDefault();
+      const body = {
+        nome: value("usuario-nome"),
+        email: value("usuario-email"),
+        senha: value("usuario-senha")
+      };
+      const manualId = Number(value("usuario-local-id"));
+      try {
+        const created = await apiPost("/usuarios", body);
+        upsertUser({ id: created.id, nome: created.nome, email: created.email });
+        log("Usuário criado: " + created.nome + " (id=" + created.id + ").", "ok", "usuarios");
+        toast("Usuário criado.");
+      } catch (error) {
+        if (error.status === 409 && manualId) {
+          upsertUser({ id: manualId, nome: body.nome, email: body.email });
+          log("Usuário já existia; ID manual " + manualId + " registrado localmente.", "warn", "usuarios");
+          toast("Usuário local registrado.");
+        } else {
+          log("Erro ao criar usuário: " + error.message + ".", "error", "usuarios");
+          toast("Erro ao criar usuário.");
+        }
+      }
+      saveLocalState();
+      renderAll();
+    }
 
-// ── Mini chart ───────────────────────────────────────────────────────────────
-function drawChart() {
-  const canvas = document.getElementById('chart');
-  const ctx = canvas.getContext('2d');
-  canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-  canvas.height = 60 * window.devicePixelRatio;
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-  const w = canvas.offsetWidth, h = 60;
-  ctx.clearRect(0, 0, w, h);
-  const max = Math.max(...throughputData, 1);
-  const step = w / (throughputData.length - 1);
-  ctx.beginPath();
-  throughputData.forEach((v, i) => {
-    const x = i * step;
-    const y = h - (v / max) * (h - 4);
-    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.strokeStyle = '#7c6aff';
-  ctx.lineWidth = 1.5;
-  ctx.lineJoin = 'round';
-  ctx.stroke();
+    async function createPurchase(event) {
+      event.preventDefault();
+      const body = buildPurchaseBody();
+      if (!body) return;
+      try {
+        const created = await apiPost("/compras", body);
+        state.purchases.push(created);
+        saveLocalState();
+        log("Compra confirmada: id=" + created.id + ", total=" + money.format(created.valor_total) + ".", "ok", "compras");
+        toast("Compra confirmada.");
+        await refreshEvents(false);
+      } catch (error) {
+        log("Erro na compra: " + error.message + ".", "error", "compras");
+        toast("Compra não confirmada.");
+      }
+      renderAll();
+    }
 
-  const grad = ctx.createLinearGradient(0, 0, 0, h);
-  grad.addColorStop(0, 'rgba(124,106,255,0.3)');
-  grad.addColorStop(1, 'rgba(124,106,255,0)');
-  ctx.lineTo(w, h); ctx.lineTo(0, h);
-  ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
-}
+    async function updateEventQuantity() {
+      const eventId = Number(el.ajusteEvento.value);
+      const quantidade = readInt("ajuste-quantidade", 0);
+      if (!eventId) return toast("Selecione um evento.");
+      try {
+        await apiPut("/eventos/" + eventId + "/quantidade", { quantidade });
+        log("Quantidade atualizada para evento " + eventId + ": " + quantidade + ".", "ok", "eventos");
+        await refreshEvents(false);
+        toast("Lote atualizado.");
+      } catch (error) {
+        log("Erro ao atualizar lote: " + error.message + ".", "error", "eventos");
+        toast("Erro ao atualizar lote.");
+      }
+    }
 
-drawChart();
-</script>
+    async function updateEventValue() {
+      const eventId = Number(el.ajusteEvento.value);
+      const valor = readFloat("ajuste-valor", 0);
+      if (!eventId) return toast("Selecione um evento.");
+      try {
+        await apiPut("/eventos/" + eventId + "/valor", { valor });
+        log("Valor atualizado para evento " + eventId + ": " + money.format(valor) + ".", "ok", "eventos");
+        await refreshEvents(false);
+        toast("Valor atualizado.");
+      } catch (error) {
+        log("Erro ao atualizar valor: " + error.message + ".", "error", "eventos");
+        toast("Erro ao atualizar valor.");
+      }
+    }
+
+    async function seedData() {
+      if (state.busy) return;
+      setBusy(true);
+      setProgress(0, "Popular dados", 0);
+      log("Iniciando carga de dados demo.", "info", "seed");
+
+      let done = 0;
+      const total = DEMO_EVENTS.length + DEMO_USERS.length;
+
+      for (const event of DEMO_EVENTS) {
+        try {
+          const created = await apiPost("/eventos", event);
+          log("Evento demo criado: " + created.nome + " (id=" + created.id + ").", "ok", "seed");
+        } catch (error) {
+          log("Evento demo não criado: " + event.nome + " (" + error.message + ").", error.status === 409 ? "warn" : "error", "seed");
+        }
+        done++;
+        setProgress(Math.round((done / total) * 100), "Popular dados", done);
+        await delay(readInt("sim-delay", 200));
+      }
+
+      for (const user of DEMO_USERS) {
+        try {
+          const created = await apiPost("/usuarios", {
+            nome: user.nome,
+            email: user.email,
+            senha: user.senha
+          });
+          upsertUser({ id: created.id, nome: created.nome, email: created.email });
+          log("Usuário demo criado: " + created.nome + " (id=" + created.id + ").", "ok", "seed");
+        } catch (error) {
+          if (error.status === 409) {
+            upsertUser({ id: user.id, nome: user.nome, email: user.email });
+            log("Usuário demo já existia: " + user.nome + " (id local=" + user.id + ").", "warn", "seed");
+          } else {
+            log("Usuário demo não criado: " + user.nome + " (" + error.message + ").", "error", "seed");
+          }
+        }
+        done++;
+        setProgress(Math.round((done / total) * 100), "Popular dados", done);
+        await delay(readInt("sim-delay", 200));
+      }
+
+      saveLocalState();
+      await refreshEvents(false);
+      setProgress(100, "Dados prontos", total);
+      setBusy(false);
+      toast("Dados demo processados.");
+      renderAll();
+    }
+
+    async function runPurchases(totalPurchases) {
+      if (state.busy) return;
+      if (!state.events.length) await refreshEvents(false);
+      if (!state.events.some((event) => event.quantidade > 0)) {
+        log("Não há eventos com ingressos disponíveis.", "warn", "compras");
+        return toast("Sem eventos disponíveis.");
+      }
+      if (!state.users.length) {
+        addDemoUsers();
+        log("Usuários demo adicionados localmente.", "warn", "compras");
+      }
+
+      setBusy(true);
+      let success = 0;
+      let fail = 0;
+      const delayMs = readInt("sim-delay", 200);
+      log("Simulação de " + totalPurchases + " compra(s) iniciada.", "info", "compras");
+
+      for (let index = 0; index < totalPurchases; index++) {
+        const availableEvents = state.events.filter((event) => event.quantidade > 0);
+        const event = pick(availableEvents);
+        const user = pick(state.users);
+        const quantidade = Math.min(Math.floor(Math.random() * 3) + 1, Math.max(event.quantidade, 1));
+        const body = {
+          transaction_id: uuid(),
+          usuario_id: Number(user.id),
+          evento_id: Number(event.id),
+          quantidade,
+          metodo_pagamento: pick(["pix", "boleto", "cartao"])
+        };
+
+        try {
+          const created = await apiPost("/compras", body);
+          state.purchases.push(created);
+          success++;
+          log("Compra " + (index + 1) + "/" + totalPurchases + ": evento " + body.evento_id + ", " + quantidade + " ingresso(s).", "ok", "compras");
+        } catch (error) {
+          fail++;
+          log("Compra " + (index + 1) + "/" + totalPurchases + " falhou: " + error.message + ".", "error", "compras");
+        }
+
+        setProgress(Math.round(((index + 1) / totalPurchases) * 100), "Compras", index + 1);
+        if ((index + 1) % 5 === 0) await refreshEvents(false);
+        await delay(delayMs);
+      }
+
+      saveLocalState();
+      await refreshEvents(false);
+      setBusy(false);
+      log("Simulação finalizada: " + success + " sucesso(s), " + fail + " falha(s).", fail ? "warn" : "ok", "compras");
+      toast("Simulação de compras finalizada.");
+      renderAll();
+    }
+
+    async function runFullSimulation() {
+      if (state.busy) return;
+      await seedData();
+      await runReads(readInt("sim-leituras", 20));
+      await runPurchases(readInt("sim-compras", 15));
+    }
+
+    async function runReads(totalReads) {
+      setBusy(true);
+      const delayMs = readInt("sim-delay", 200);
+      log("Simulação de " + totalReads + " leitura(s) iniciada.", "info", "leituras");
+      for (let index = 0; index < totalReads; index++) {
+        try {
+          await api("/eventos");
+          log("Leitura " + (index + 1) + "/" + totalReads + ": GET /eventos.", "ok", "leituras");
+        } catch (error) {
+          log("Leitura " + (index + 1) + "/" + totalReads + " falhou: " + error.message + ".", "error", "leituras");
+        }
+        setProgress(Math.round(((index + 1) / totalReads) * 100), "Leituras", index + 1);
+        await delay(delayMs);
+      }
+      setBusy(false);
+      await refreshEvents(false);
+    }
+
+    function buildPurchaseBody() {
+      const evento_id = Number(el.compraEvento.value);
+      const usuario_id = Number(el.compraUsuario.value);
+      const quantidade = readInt("compra-quantidade", 1);
+      const metodo_pagamento = el.compraMetodo.value;
+      if (!evento_id) return toast("Selecione um evento.");
+      if (!usuario_id) return toast("Selecione um usuário.");
+      if (quantidade < 1) return toast("Informe uma quantidade válida.");
+      return {
+        transaction_id: uuid(),
+        usuario_id,
+        evento_id,
+        quantidade,
+        metodo_pagamento
+      };
+    }
+
+    function addDemoUsers() {
+      DEMO_USERS.forEach((user) => upsertUser({
+        id: user.id,
+        nome: user.nome,
+        email: user.email
+      }));
+      saveLocalState();
+      renderAll();
+      toast("Usuários demo adicionados.");
+    }
+
+    function upsertUser(user) {
+      const existingIndex = state.users.findIndex((item) => Number(item.id) === Number(user.id));
+      if (existingIndex >= 0) state.users.splice(existingIndex, 1, user);
+      else state.users.push(user);
+      state.users.sort((a, b) => Number(a.id) - Number(b.id));
+    }
+
+    function renderAll() {
+      renderMetrics();
+      renderEvents();
+      renderCheckout();
+      renderUsers();
+      renderLastPurchase();
+      drawChart();
+    }
+
+    function renderMetrics() {
+      el.metricEvents.textContent = state.events.length;
+      const tickets = state.events.reduce((sum, event) => sum + Number(event.quantidade || 0), 0);
+      el.metricTickets.textContent = tickets;
+      el.metricTicketsDetail.textContent = tickets ? "Disponíveis no catálogo" : "Sem estoque carregado";
+      el.metricPurchases.textContent = state.purchases.length;
+      const last = state.purchases[state.purchases.length - 1];
+      el.metricPurchasesDetail.textContent = last ? "Última compra #" + last.id : "Confirmadas nesta sessão";
+      el.metricEventsDetail.textContent = state.events.length ? "Serviço de eventos sincronizado" : "Nenhum carregado";
+    }
+
+    function renderEvents() {
+      if (!state.events.length) {
+        el.eventGrid.innerHTML = '<div class="empty">Nenhum evento disponível. Use "Popular dados" ou cadastre um novo evento.</div>';
+        fillEventSelects();
+        return;
+      }
+
+      el.eventGrid.innerHTML = state.events.map((event) => {
+        const selected = Number(event.id) === Number(state.selectedEventId) ? " selected" : "";
+        const stockClass = event.quantidade > 20 ? "tag-green" : "tag-amber";
+        return `
+          <article class="event-card${selected}" data-event-id="${event.id}">
+            <div>
+              <h3 class="event-name">${escapeHtml(event.nome)}</h3>
+              <div class="event-meta">
+                <span class="tag">${formatDate(event.data)}</span>
+                <span class="tag ${stockClass}">${event.quantidade} ingresso(s)</span>
+              </div>
+            </div>
+            <div class="event-footer">
+              <div class="price">${money.format(Number(event.valor || 0))} <span>por ingresso</span></div>
+              <button class="btn" type="button" data-select-event="${event.id}">Comprar</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      document.querySelectorAll("[data-select-event]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.selectedEventId = Number(button.dataset.selectEvent);
+          renderAll();
+          document.getElementById("form-compra").scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
+      });
+
+      fillEventSelects();
+    }
+
+    function fillEventSelects() {
+      const options = state.events.map((event) => {
+        const label = "#" + event.id + " - " + event.nome + " (" + event.quantidade + " disp.)";
+        return '<option value="' + event.id + '">' + escapeHtml(label) + "</option>";
+      }).join("");
+      el.compraEvento.innerHTML = options || '<option value="">Nenhum evento</option>';
+      el.ajusteEvento.innerHTML = options || '<option value="">Nenhum evento</option>';
+      if (state.selectedEventId && state.events.some((event) => Number(event.id) === Number(state.selectedEventId))) {
+        el.compraEvento.value = String(state.selectedEventId);
+        el.ajusteEvento.value = String(state.selectedEventId);
+      } else if (state.events.length) {
+        state.selectedEventId = Number(state.events[0].id);
+        el.compraEvento.value = String(state.selectedEventId);
+        el.ajusteEvento.value = String(state.selectedEventId);
+      }
+    }
+
+    function renderCheckout() {
+      el.compraUsuario.innerHTML = state.users.map((user) => {
+        return '<option value="' + user.id + '">#' + user.id + " - " + escapeHtml(user.nome) + "</option>";
+      }).join("") || '<option value="">Nenhum usuário local</option>';
+
+      const event = selectedEvent();
+      const quantity = readInt("compra-quantidade", 1);
+      const total = event ? Number(event.valor || 0) * quantity : 0;
+      el.compraTotal.textContent = money.format(total);
+
+      if (!event || !state.users.length) {
+        updateCheckoutStatus("warn", "Pendente");
+      } else if (event.quantidade <= 0) {
+        updateCheckoutStatus("off", "Esgotado");
+      } else {
+        updateCheckoutStatus("ok", "Pronto");
+      }
+    }
+
+    function renderUsers() {
+      if (!state.users.length) {
+        el.userList.innerHTML = '<div class="empty">Nenhum usuário salvo localmente.</div>';
+        return;
+      }
+      el.userList.innerHTML = state.users.map((user) => `
+        <div class="total-box">
+          <div>
+            <span>#${user.id}</span>
+            <strong style="font-size:15px">${escapeHtml(user.nome)}</strong>
+            <div style="color:var(--muted);font-size:12px;overflow-wrap:anywhere">${escapeHtml(user.email || "")}</div>
+          </div>
+          <button class="btn" type="button" data-use-user="${user.id}">Usar</button>
+        </div>
+      `).join("");
+
+      document.querySelectorAll("[data-use-user]").forEach((button) => {
+        button.addEventListener("click", () => {
+          el.compraUsuario.value = button.dataset.useUser;
+          renderCheckout();
+        });
+      });
+    }
+
+    function renderLastPurchase() {
+      const last = state.purchases[state.purchases.length - 1];
+      if (!last) {
+        el.lastPurchaseSubtitle.textContent = "Nenhuma compra confirmada.";
+        el.lastPurchase.innerHTML = '<div class="empty">A próxima compra confirmada aparecerá aqui.</div>';
+        return;
+      }
+      el.lastPurchaseSubtitle.textContent = "Compra #" + last.id + " confirmada.";
+      el.lastPurchase.innerHTML = `
+        <div class="total-box">
+          <div>
+            <span>Transação</span>
+            <strong style="font-size:14px;overflow-wrap:anywhere">${escapeHtml(last.transaction_id || "")}</strong>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="total-box"><span>Evento</span><strong>${last.evento_id}</strong></div>
+          <div class="total-box"><span>Qtd.</span><strong>${last.quantidade}</strong></div>
+          <div class="total-box"><span>Pagamento</span><strong>${escapeHtml(last.metodo_pagamento || "")}</strong></div>
+          <div class="total-box"><span>Total</span><strong>${money.format(Number(last.valor_total || 0))}</strong></div>
+        </div>
+      `;
+    }
+
+    function setApiStatus(kind, title, detail) {
+      el.metricApi.textContent = title;
+      el.metricApiDetail.textContent = detail;
+      const className = kind === "ok" ? "status status-ok" : kind === "off" ? "status status-off" : "status status-warn";
+      el.catalogStatus.className = className;
+    }
+
+    function updateCatalogStatus(kind, label) {
+      el.catalogStatus.textContent = label;
+      el.catalogStatus.className = kind === "ok" ? "status status-ok" : kind === "off" ? "status status-off" : "status status-warn";
+    }
+
+    function updateCheckoutStatus(kind, label) {
+      el.checkoutStatus.textContent = label;
+      el.checkoutStatus.className = kind === "ok" ? "status status-ok" : kind === "off" ? "status status-off" : "status status-warn";
+    }
+
+    function selectedEvent() {
+      const id = Number(el.compraEvento.value || state.selectedEventId);
+      return state.events.find((event) => Number(event.id) === id) || null;
+    }
+
+    function setProgress(percent, label, done) {
+      el.progressBar.style.width = percent + "%";
+      el.progressLabel.textContent = label + (done ? " (" + done + ")" : "");
+      el.progressValue.textContent = percent + "%";
+    }
+
+    function setBusy(value) {
+      state.busy = value;
+      document.querySelectorAll("button, input, select").forEach((node) => {
+        if (node.id !== "btn-clear-log") node.disabled = value;
+      });
+    }
+
+    function log(message, type = "info", kind = "app") {
+      const line = document.createElement("div");
+      line.className = "log-line";
+      line.innerHTML = `
+        <span class="log-time">${new Date().toLocaleTimeString("pt-BR")}</span>
+        <span class="log-kind">${escapeHtml(kind)}</span>
+        <span class="log-${type}">${escapeHtml(message)}</span>
+      `;
+      el.log.appendChild(line);
+      el.log.scrollTop = el.log.scrollHeight;
+    }
+
+    function clearLog() {
+      el.log.innerHTML = "";
+      state.throughput = new Array(36).fill(0);
+      state.reqsThisSecond = 0;
+      setProgress(0, "Aguardando execução", 0);
+      drawChart();
+    }
+
+    function drawChart() {
+      const canvas = el.chart;
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      const width = canvas.clientWidth || 720;
+      const height = 76;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.fillStyle = "#eef3f8";
+      ctx.fillRect(0, 0, width, height);
+
+      const max = Math.max(1, ...state.throughput);
+      const gap = 3;
+      const barWidth = Math.max(2, (width - gap * (state.throughput.length - 1)) / state.throughput.length);
+      state.throughput.forEach((value, index) => {
+        const x = index * (barWidth + gap);
+        const barHeight = Math.max(2, (value / max) * (height - 10));
+        const y = height - barHeight;
+        ctx.fillStyle = value ? "#1957a6" : "#d9e1ea";
+        ctx.fillRect(x, y, barWidth, barHeight);
+      });
+    }
+
+    function toast(message) {
+      el.toast.textContent = message;
+      el.toast.classList.add("show");
+      window.clearTimeout(toast.timer);
+      toast.timer = window.setTimeout(() => el.toast.classList.remove("show"), 2600);
+    }
+
+    function readInt(id, fallback) {
+      const value = parseInt(document.getElementById(id).value, 10);
+      return Number.isFinite(value) ? value : fallback;
+    }
+
+    function readFloat(id, fallback) {
+      const value = parseFloat(document.getElementById(id).value);
+      return Number.isFinite(value) ? value : fallback;
+    }
+
+    function value(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function delay(ms) {
+      return new Promise((resolve) => window.setTimeout(resolve, ms));
+    }
+
+    function pick(items) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
+
+    function uuid() {
+      if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (char) => {
+        const random = Math.random() * 16 | 0;
+        const value = char === "x" ? random : (random & 0x3 | 0x8);
+        return value.toString(16);
+      });
+    }
+
+    function formatDate(value) {
+      if (!value) return "Sem data";
+      const parsed = new Date(value + "T00:00:00Z");
+      if (Number.isNaN(parsed.getTime())) return value;
+      return dateFmt.format(parsed);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
 </body>
 </html>
